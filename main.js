@@ -106,11 +106,11 @@ loadChatgptDB();
 
 global.authFile = `GataBotSession`
 const {state, saveState, saveCreds} = await useMultiFileAuthState(global.authFile)
-const msgRetryCounterMap = (MessageRetryMap) => { };
+const msgRetryCounterMap = (MessageRetryMap) => { }
 const msgRetryCounterCache = new NodeCache()
-const {version} = await fetchLatestBaileysVersion();
-let phoneNumber = global.botNumberCode
+const {version} = await fetchLatestBaileysVersion()
 
+let phoneNumber = global.botNumberCode
 const methodCodeQR = process.argv.includes("qr")
 const methodCode = !!phoneNumber || process.argv.includes("code")
 const MethodMobile = process.argv.includes("mobile")
@@ -179,9 +179,10 @@ syncFullHistory: true,
 getMessage: async (clave) => {
 let jid = jidNormalizedUser(clave.remoteJid)
 let msg = await store.loadMessage(jid, clave.id)
-return msg?.message || ""
+return (msg?.message || "").replace(/(?:Closing stale open|Closing open session)/g, "")
 },
-msgRetryCounterCache, //Resolver mensajes en espera
+msgRetryCounterCache, // Resolver mensajes en espera
+msgRetryCounterMap, // Determinar si se debe volver a intentar enviar un mensaje o no
 defaultQueryTimeoutMs: undefined,
 version,  
 }
@@ -218,6 +219,14 @@ if (global.db) setInterval(async () => {
 if (global.db.data) await global.db.write()
 if (opts['autocleartmp'] && (global.support || {}).find) (tmp = [os.tmpdir(), 'tmp', "GataJadiBot"], tmp.forEach(filename => cp.spawn('find', [filename, '-amin', '2', '-type', 'f', '-delete'])))}, 30 * 1000)}
 if (global.obtenerQrWeb === 1) (await import('./server.js')).default(global.conn, PORT)
+
+async function getMessage(key) {
+if (store) {
+const msg = store.loadMessage(key.remoteJid, key.id)
+return msg.message
+} return {
+conversation: 'SimpleBot',
+}}
 
 async function connectionUpdate(update) {  
 const {connection, lastDisconnect, isNewLogin} = update
